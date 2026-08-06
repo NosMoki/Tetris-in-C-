@@ -67,7 +67,7 @@ static void ob_printf(const char* fmt,...){
     memcpy(outbuf+outpos,tmp,n); outpos+=n;
 }
 
-// cursor + reset via buffer
+
 static void mv (int r,int c){ ob_printf("\x1b[%d;%dH",r+1,c+1); }
 static void rst()            { ob_puts("\x1b[0m"); }
 
@@ -77,8 +77,8 @@ static const int SCOLS=20, SROWS=28;
 
 struct Slot {
     char    ch[2];
-    uint8_t fr,fg,fb;   // fg color
-    uint8_t br,bg,bb;   // bg color
+    uint8_t fr,fg,fb;   
+    uint8_t br,bg,bb;   
     bool    bld;
     bool operator==(const Slot& o) const {
         return ch[0]==o.ch[0]&&ch[1]==o.ch[1]&&
@@ -86,8 +86,8 @@ struct Slot {
                br==o.br&&bg==o.bg&&bb==o.bb&&bld==o.bld;
     }
 };
-static Slot scr[SROWS][SCOLS];   // desired
-static Slot prv[SROWS][SCOLS];   // last sent
+static Slot scr[SROWS][SCOLS];   
+static Slot prv[SROWS][SCOLS];   
 
 static void screen_init(){
     for(int r=0;r<SROWS;r++) for(int c=0;c<SCOLS;c++){
@@ -138,7 +138,7 @@ static void st(int row,int col,const char* str,
 }
 
 
-// TIME + RNG
+
 
 static uint64_t now_ms(){
 #ifdef _WIN32
@@ -291,27 +291,27 @@ static const uint8_t
 
 
 static void draw_chrome(){
-    // Fill all with void
+
     for(int r=0;r<SROWS;r++)
         for(int c=0;c<SCOLS;c++)
             sp(r,c,' ',' ',60,55,100,VR,VG,VB);
 
-    // Board empty cells
+   
     for(int r=0;r<BH;r++)
         for(int c=0;c<BW;c++)
             sp(B_ROW+r,B_COL+c,'.',' ',30,26,55,ER,EG,EB);
 
-    // Board border
+
     uint8_t br=70,bg2=65,bb=120;
-    // top row
+
     for(int c=B_COL;c<B_COL+BW;c++) sp(0,c,'-','-',br,bg2,bb,VR,VG,VB);
     sp(0,B_COL-1,'+','-',br,bg2,bb,VR,VG,VB);
     sp(0,B_COL+BW,'-','+',br,bg2,bb,VR,VG,VB);
-    // bottom row
+
     for(int c=B_COL;c<B_COL+BW;c++) sp(BH+1,c,'-','-',br,bg2,bb,VR,VG,VB);
     sp(BH+1,B_COL-1,'+','-',br,bg2,bb,VR,VG,VB);
     sp(BH+1,B_COL+BW,'-','+',br,bg2,bb,VR,VG,VB);
-    // sides
+
     for(int r=1;r<=BH;r++){
         sp(r,B_COL-1,'|',' ',br,bg2,bb,VR,VG,VB);
         sp(r,B_COL+BW,'|',' ',br,bg2,bb,VR,VG,VB);
@@ -409,21 +409,21 @@ static void put_empty(int row,int col){
 
 static void update_stat(int panel_row,uint32_t val,
                         uint8_t vr,uint8_t vg,uint8_t vb){
-    // value right-aligned in the interior right half (slots SB+4..SB+6)
+    
     char tmp[9]; snprintf(tmp,sizeof(tmp),"%8u",val);
-    // pack 8 chars into 4 slots
+    
     for(int i=0;i<4;i++)
         sp(panel_row+1,SB+3+i,tmp[i*2],tmp[i*2+1],vr,vg,vb,SR,SG,SB2,true);
 }
 
 static void update_next(){
-    // clear interior rows 10-14 cols SB+1..SB+6
+   
     for(int r=10;r<15;r++)
         for(int c=SB+1;c<SB+7;c++)
             sp(r,c,' ',' ',60,55,100,SR,SG,SB2);
 
     RGB nc=COLORS[G.next];
-    // centre piece: 4 cols wide = 4 slots, interior = 6 slots -> offset 1
+    
     int ox=SB+2, oy=11;
     for(int i=0;i<4;i++){
         int dr=PIECES[G.next][0][i][0], dc=PIECES[G.next][0][i][1];
@@ -435,13 +435,13 @@ static void update_next(){
 }
 
 static void render(){
-    // Board
+    
     for(int r=0;r<BH;r++) for(int c=0;c<BW;c++){
         uint8_t v=board[r][c];
         if(v) put_cell(r,c,COLORS[v-1],false);
         else  put_empty(r,c);
     }
-    // Ghost
+    
     int gr=ghost_row();
     if(gr!=G.py) for(int i=0;i<4;i++){
         int r=gr+PIECES[G.piece][G.rot][i][0];
@@ -449,14 +449,14 @@ static void render(){
         if(r>=0&&r<BH&&c>=0&&c<BW&&!board[r][c])
             put_cell(r,c,COLORS[G.piece],true);
     }
-    // Active piece
+   
     for(int i=0;i<4;i++){
         int r=G.py+PIECES[G.piece][G.rot][i][0];
         int c=G.px+PIECES[G.piece][G.rot][i][1];
         if(r>=0&&r<BH&&c>=0&&c<BW)
             put_cell(r,c,COLORS[G.piece],false);
     }
-    // Sidebar 
+    
     update_stat(0,G.score,200,190,255);
     update_stat(3,G.lines,120,220,150);
     update_stat(6,G.level,210,180,255);
@@ -467,10 +467,10 @@ static void render(){
 
 static void draw_gameover(){
     int oy=B_ROW+BH/2-3;
-    // overlay box 
+    
     for(int r=0;r<7;r++) for(int c=0;c<BW;c++)
         sp(oy+r,B_COL+c,' ',' ',60,50,100,22,8,42);
-    // border
+    
     for(int c=B_COL;c<B_COL+BW;c++){
         sp(oy,  c,'-','-',200,40,60,22,8,42);
         sp(oy+6,c,'-','-',200,40,60,22,8,42);
@@ -483,7 +483,7 @@ static void draw_gameover(){
         sp(oy+r,B_COL,      '|',' ',200,40,60,22,8,42);
         sp(oy+r,B_COL+BW-1,' ','|',200,40,60,22,8,42);
     }
-    // text 
+  
     st(oy+1,B_COL+1,"GAME OVER!  ",255,60,80,22,8,42,true);
     char tmp[17];
     snprintf(tmp,sizeof(tmp),"Score%7u",G.score);
@@ -500,7 +500,7 @@ int main(){
     rng_seed();
     term_init();
 
-    // Paint blank lines 
+    
     printf("\x1b[H");
     for(int i=0;i<SROWS+2;i++) printf("\x1b[2K\n");
     printf("\x1b[H");
